@@ -49,6 +49,18 @@ export async function run() {
     await vscode.commands.executeCommand("cibyp.attach");
     const driver = await webviewDriver();
     try {
+      // postMessage delivery is asynchronous, especially on a cold Linux renderer.
+      for (let i = 0; i < 100; i++) {
+        if (
+          (
+            await driver.evaluate(
+              "return d.getElementById('attachments').textContent;",
+            )
+          ).includes("selection.ts")
+        )
+          break;
+        await new Promise((r) => setTimeout(r, 50));
+      }
       assert.match(
         await driver.evaluate(
           "return d.getElementById('attachments').textContent;",
