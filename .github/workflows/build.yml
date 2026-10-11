@@ -93,4 +93,8 @@ jobs:
           files = sorted(p for p in Path('artifacts').rglob('*') if p.suffix in ('.vsix', '.zip'))
           Path('SHA256SUMS').write_text(''.join(f'{sha256(p.read_bytes()).hexdigest()}  {p.name}\n' for p in files))
           PY
-          gh release create "$RELEASE_TAG" artifacts/cibyp-vscode/*.vsix artifacts/cibyp-jetbrains/*.zip SHA256SUMS --title "$RELEASE_TAG" --generate-notes --prerelease
+          if gh release view "$RELEASE_TAG" > /dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" artifacts/cibyp-vscode/*.vsix artifacts/cibyp-jetbrains/*.zip SHA256SUMS --clobber
+          else
+            gh release create "$RELEASE_TAG" artifacts/cibyp-vscode/*.vsix artifacts/cibyp-jetbrains/*.zip SHA256SUMS --title "$RELEASE_TAG" --generate-notes --prerelease
+          fi
