@@ -40,7 +40,15 @@ ssh -N -L 3456:127.0.0.1:3456 user@your-machine
 
 远程直连要求 HTTPS，不自动降级为明文；`.onion` 原生 Tor 传输尚未接入 IDE 插件，可由用户自行建立本地受信任隧道。IDE 断开连接或关闭窗口不会停止后台任务，**停止**按钮才停止当前会话。审批仅允许本次或拒绝；过期审批先核对后台当前请求，避免替另一条请求作答。
 
-## 开发
+## 界面预览
+
+VS Code 截图来自真实扩展宿主，使用隔离项目与确定性的测试对话；界面直接使用当前 IDE 的颜色、字体和焦点样式。
+
+![VS Code · Dark Modern](docs/screenshots/vscode-dark.png)
+
+[浅色主题截图](docs/screenshots/vscode-light.png)。[JetBrains 原生组件预览](docs/screenshots/jetbrains-native.png)由 IntelliJ 平台测试框架渲染生产 Tool Window 组件，包含 Markdown 表格、附件、原生差异入口与输入区；它不是完整 IDE 窗口截图。
+
+## 开发与验证
 
 ```sh
 npm ci --ignore-scripts
@@ -52,7 +60,7 @@ cd jetbrains
 ./gradlew test buildPlugin
 ```
 
-`npm run test:vscode` 启动真实 VS Code 扩展宿主，用隔离项目和确定性的后台替身验证连接、工作区、新对话与停止，不调用付费模型。设置 `CIBYP_VSCODE_EXECUTABLE` 可复用已安装 VS Code。设置 `CIBYP_SOURCE` 指向桌面仓库可额外运行真实 BackendServer 的 HTTP / WebSocket 合约测试。
+`npm run test:vscode` 启动真实 VS Code 扩展宿主，用隔离项目和确定性的后台替身验证连接、工作区、未保存选区与诊断附件、Webview 发送、新对话与停止，不调用付费模型。设置 `CIBYP_VSCODE_EXECUTABLE` 可复用已安装 VS Code。设置 `CIBYP_SOURCE` 指向桌面仓库可额外运行真实 BackendServer 的 HTTP / WebSocket 合约测试。客户端测试覆盖丢失回执后的请求去重、事件回放过期与登录过期。
 
 CI 分别生成 VSIX 和 JetBrains 插件 ZIP，检查真实 VS Code 扩展宿主和桌面协议；标签 `v*` 在全部任务通过后生成带 SHA-256 的 GitHub Prerelease。目前不自动发布 Marketplace；Marketplace 发布需要各平台发行账号，下载包可以直接安装。
 

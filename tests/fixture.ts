@@ -1,12 +1,16 @@
 import { createServer } from "node:http";
 import { WebSocketServer, WebSocket } from "ws";
 import { randomUUID } from "node:crypto";
-export async function fixture() {
+export async function fixture(
+  options: { dropFirstAcknowledgement?: boolean; resetOnce?: boolean } = {},
+) {
   const token = "b".repeat(64),
     calls: any[] = [],
     sessions: any[] = [],
     requests = new Map<string, any>();
   let sequence = 0;
+  let dropped = false,
+    reset = false;
   const server = createServer(async (req, res) => {
     res.setHeader("Content-Type", "application/json");
     if (req.url === "/api/health")
@@ -110,6 +114,15 @@ export async function fixture() {
     }
     const value = { result };
     requests.set(body.id, value);
+    if (
+      options.dropFirstAcknowledgement &&
+      !dropped &&
+      body.method === "submitMessage"
+    ) {
+      dropped = true;
+      res.destroy();
+      return;
+    }
     res.end(JSON.stringify(value));
   });
   const ws = new WebSocketServer({ noServer: true });
@@ -120,6 +133,10 @@ export async function fixture() {
     }
     ws.handleUpgrade(req, socket, head, (client) => {
       ws.emit("connection", client, req);
+      if (options.resetOnce && !reset) {
+        reset = true;
+        client.send('{"type":"reset"}');
+      }
       client.send('{"type":"connected"}');
     });
   });

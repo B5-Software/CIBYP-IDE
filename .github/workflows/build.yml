@@ -28,6 +28,10 @@ jobs:
           name: cibyp-vscode
           path: vscode/*.vsix
           if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vscode-theme-screenshots
+          path: docs/screenshots/vscode-*.png
   jetbrains:
     runs-on: ubuntu-latest
     steps:
@@ -44,6 +48,11 @@ jobs:
           name: cibyp-jetbrains
           path: jetbrains/build/distributions/*.zip
           if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: jetbrains-test-report
+          path: jetbrains/build/reports/tests/
   desktop-contract:
     runs-on: ubuntu-latest
     steps:
@@ -78,5 +87,10 @@ jobs:
           GH_REPO: ${{ github.repository }}
           RELEASE_TAG: ${{ github.ref_name }}
         run: |
-          find artifacts -type f \( -name '*.vsix' -o -name '*.zip' \) -exec sha256sum {} + > SHA256SUMS
+          python - <<'PY'
+          from pathlib import Path
+          from hashlib import sha256
+          files = sorted(p for p in Path('artifacts').rglob('*') if p.suffix in ('.vsix', '.zip'))
+          Path('SHA256SUMS').write_text(''.join(f'{sha256(p.read_bytes()).hexdigest()}  {p.name}\n' for p in files))
+          PY
           gh release create "$RELEASE_TAG" artifacts/cibyp-vscode/*.vsix artifacts/cibyp-jetbrains/*.zip SHA256SUMS --title "$RELEASE_TAG" --generate-notes --prerelease

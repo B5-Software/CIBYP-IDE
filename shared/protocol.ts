@@ -21,6 +21,7 @@ export interface Message {
   role: string;
   content: string;
   reasoning?: string;
+  reasoningKind?: string;
   attachments?: { name?: string; path?: string; type?: string }[];
   tool_calls?: { id: string; function: { name: string; arguments: string } }[];
 }
@@ -85,6 +86,8 @@ export function publicView(raw: any): View {
       role: m.role,
       content: typeof m.content === "string" ? m.content : "",
       reasoning: m.reasoningSummary || m.reasoning || "",
+      reasoningKind:
+        m.reasoningKind || (m.reasoningSummary ? "summary" : "provider"),
       attachments: m.attachments || [],
       tool_calls: m.tool_calls,
     })),

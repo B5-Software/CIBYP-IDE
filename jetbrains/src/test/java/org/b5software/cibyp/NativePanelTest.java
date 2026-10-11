@@ -11,6 +11,8 @@ import javax.swing.*;
 
 public class NativePanelTest extends BasePlatformTestCase {
   public void testNativeToolWindowRendersMarkdownAttachmentsAndComposer() throws Exception {
+    LookAndFeel previous = UIManager.getLookAndFeel();
+    UIManager.setLookAndFeel(new com.intellij.ide.ui.laf.IntelliJLaf());
     CibypPanel panel = new CibypPanel(getProject());
     try {
       var details =
@@ -37,6 +39,7 @@ public class NativePanelTest extends BasePlatformTestCase {
       ImageIO.write(image, "png", file.toFile());
     } finally {
       Disposer.dispose(panel);
+      UIManager.setLookAndFeel(previous);
     }
   }
 

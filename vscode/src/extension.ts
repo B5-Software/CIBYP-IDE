@@ -246,9 +246,9 @@ class CibypView implements vscode.WebviewViewProvider, vscode.Disposable {
       .get<string>("startCommand", "cibyp-tui");
     const terminal = vscode.window.createTerminal({
       name: "CIBYP",
-      shellPath: configured,
     });
     terminal.show();
+    terminal.sendText(configured, true);
     void vscode.window.showInformationMessage(
       tr(
         "CIBYP is starting. Choose Connect to Instance when it is ready.",
@@ -585,6 +585,28 @@ class CibypView implements vscode.WebviewViewProvider, vscode.Disposable {
           const options = (q.options || []).map((o: any) =>
             typeof o === "string" ? o : o.label || o.title,
           );
+          if (
+            options.length &&
+            (q.multiSelect === true || q.multiple === true)
+          ) {
+            const customLabel = tr("Custom answer…", "自定义回答…");
+            const picked = await vscode.window.showQuickPick(
+              [...options, customLabel] as string[],
+              { title: q.question || q.title, canPickMany: true },
+            );
+            if (!picked) return;
+            const answer = picked.filter((value) => value !== customLabel);
+            if (picked.includes(customLabel)) {
+              const text = await vscode.window.showInputBox({
+                title: q.question || q.title,
+              });
+              if (text === undefined) return;
+              if (text.trim()) answer.push(text.trim());
+            }
+            if (!answer.length) return;
+            answers.push({ question: q.question, answer });
+            continue;
+          }
           const picked = options.length
             ? await vscode.window.showQuickPick(
                 [...options, tr("Custom answer…", "自定义回答…")],

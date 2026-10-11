@@ -76,7 +76,10 @@ function renderMessages(messages: any[]) {
     if (message.reasoning) {
       const reasoning = document.createElement("details"),
         summary = document.createElement("summary");
-      summary.textContent = t("Reasoning", "推理");
+      summary.textContent =
+        message.reasoningKind === "summary"
+          ? t("Reasoning summary", "推理摘要")
+          : t("Reasoning", "推理");
       const content = document.createElement("div");
       content.textContent = message.reasoning;
       reasoning.append(summary, content);

@@ -50,6 +50,39 @@ test("remote login and expiry fail explicitly without putting credentials in URL
   assert.equal(await c.login("fixture-password"), f.token);
   await c.connect();
   assert.ok(!c.url.includes(f.token));
+  const events: any[] = [];
+  c.onEvent((event) => events.push(event));
+  await until(() => f.sockets.size > 0);
+  for (const socket of f.sockets) socket.close(1008, "Session expired");
+  await until(() =>
+    events.some((event) => event.type === "authentication-required"),
+  );
+  await new Promise((r) => setTimeout(r, 600));
+  assert.equal(f.sockets.size, 0);
+});
+
+test("lost send acknowledgement is retried with the same ID and runs only once", async (t) => {
+  const f = await fixture({ dropFirstAcknowledgement: true });
+  t.after(() => f.close());
+  const client = new BackendClient({ ...f, local: true });
+  t.after(() => client.close());
+  await client.request("submitMessage", "session", "Once only", []);
+  assert.equal(f.calls.filter((c) => c.method === "submitMessage").length, 1);
+});
+
+test("an expired replay window refreshes snapshot and resumes live events", async (t) => {
+  const f = await fixture({ resetOnce: true });
+  t.after(() => f.close());
+  const client = new BackendClient({ ...f, local: true });
+  t.after(() => client.close());
+  const events: any[] = [];
+  client.onEvent((event) => events.push(event));
+  await client.connect();
+  await until(() => events.some((e) => e.type === "snapshot"));
+  await until(() => events.filter((e) => e.connected).length >= 2);
+  f.publish("agent:session-event", { type: "status", status: "ready" });
+  await until(() => events.some((e) => e.payload?.status === "ready"));
+  assert.equal(f.calls.filter((c) => c.method === "snapshot").length, 2);
 });
 test("discovery rejects non-loopback, stale processes, bad protocol and symbolic links", async (t) => {
   const dir = await mkdtemp(join(tmpdir(), "cibyp-ide-discovery-"));
