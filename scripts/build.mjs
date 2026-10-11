@@ -1,5 +1,6 @@
 import { build } from "esbuild";
 import { mkdir, copyFile } from "node:fs/promises";
+import "./notices.mjs";
 await mkdir("vscode/dist", { recursive: true });
 await build({
   entryPoints: ["vscode/src/extension.ts"],

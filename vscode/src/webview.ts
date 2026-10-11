@@ -227,6 +227,14 @@ window.addEventListener("message", ({ data }) => {
     saveDraft();
     el<HTMLButtonElement>("send").disabled = false;
   }
+  if (
+    data.type === "sent" &&
+    data.key !== key &&
+    drafts[data.key] === data.text
+  ) {
+    delete drafts[data.key];
+    vscode.setState({ drafts });
+  }
   if (data.type === "send-failed" && data.key === key) {
     sending = false;
     el<HTMLButtonElement>("send").disabled = false;

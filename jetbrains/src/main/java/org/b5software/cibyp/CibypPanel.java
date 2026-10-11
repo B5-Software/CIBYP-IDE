@@ -65,6 +65,7 @@ public final class CibypPanel implements Disposable {
   private volatile boolean disposed;
   private boolean refreshQueued;
   private volatile long generation;
+  private volatile long connectionOperation;
   private final List<Map<String, String>> attachments = new ArrayList<>();
   private final Map<String, String> drafts = new HashMap<>();
   private final List<Extension> extensions = List.of(TablesExtension.create());
@@ -245,12 +246,14 @@ public final class CibypPanel implements Disposable {
   }
 
   private void connectDialog() {
+    long operation = ++connectionOperation;
     status.setText(t("connecting"));
     background(
         () -> {
           List<Instance> found = Protocol.discover(Path.of(System.getProperty("java.io.tmpdir")));
           ui(
               () -> {
+                if (operation != connectionOperation) return;
                 ConnectionDialog dialog =
                     new ConnectionDialog(
                         project,
@@ -290,7 +293,7 @@ public final class CibypPanel implements Disposable {
                           PasswordSafe.getInstance().setPassword(credentials, token);
                         }
                         JsonObject snapshot = next.connect();
-                        if (disposed) {
+                        if (disposed || operation != connectionOperation) {
                           next.close();
                           return;
                         }
@@ -354,6 +357,7 @@ public final class CibypPanel implements Disposable {
   }
 
   private void disconnect() {
+    connectionOperation++;
     generation++;
     if (client != null) client.close();
     client = null;
@@ -605,7 +609,7 @@ public final class CibypPanel implements Disposable {
                   drafts.put(target, input.getText());
                   attachments.removeAll(files);
                   renderAttachments();
-                }
+                } else if (Objects.equals(drafts.get(target), text)) drafts.remove(target);
                 send.setEnabled(true);
               });
           refresh();

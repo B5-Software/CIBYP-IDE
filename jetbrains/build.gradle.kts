@@ -23,3 +23,9 @@ intellijPlatform {
     }
 }
 tasks.test { useJUnitPlatform() }
+tasks.processResources {
+    from("../licenses/commonmark-0.24.0.txt") {
+        into("META-INF")
+        rename { "THIRD-PARTY-NOTICES.txt" }
+    }
+}
