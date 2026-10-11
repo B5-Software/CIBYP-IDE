@@ -1,0 +1,171 @@
+{
+  "name": "cibyp",
+  "displayName": "Could I Be Your Partner",
+  "description": "Connect VS Code to your shared CIBYP Agent: chat, workspace context, approvals, history and remote instances.",
+  "version": "0.1.0-alpha.1",
+  "publisher": "b5-software",
+  "license": "GPL-3.0-or-later",
+  "icon": "media/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/B5-Software/CIBYP-IDE"
+  },
+  "engines": {
+    "vscode": "^1.96.0"
+  },
+  "categories": [
+    "AI",
+    "Other"
+  ],
+  "extensionKind": [
+    "workspace"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": false
+    },
+    "virtualWorkspaces": {
+      "supported": false
+    }
+  },
+  "main": "./dist/extension.cjs",
+  "activationEvents": [
+    "onView:cibyp.chat"
+  ],
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "cibyp",
+          "title": "CIBYP",
+          "icon": "media/cibyp.svg"
+        }
+      ]
+    },
+    "views": {
+      "cibyp": [
+        {
+          "type": "webview",
+          "id": "cibyp.chat",
+          "name": "Agent"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "cibyp.connect",
+        "title": "%connect%",
+        "category": "CIBYP",
+        "icon": "$(plug)"
+      },
+      {
+        "command": "cibyp.disconnect",
+        "title": "%disconnect%",
+        "category": "CIBYP"
+      },
+      {
+        "command": "cibyp.start",
+        "title": "%start%",
+        "category": "CIBYP"
+      },
+      {
+        "command": "cibyp.new",
+        "title": "%new%",
+        "category": "CIBYP",
+        "icon": "$(add)"
+      },
+      {
+        "command": "cibyp.sessions",
+        "title": "%sessions%",
+        "category": "CIBYP",
+        "icon": "$(history)"
+      },
+      {
+        "command": "cibyp.attach",
+        "title": "%attach%",
+        "category": "CIBYP",
+        "icon": "$(add)"
+      },
+      {
+        "command": "cibyp.stop",
+        "title": "%stop%",
+        "category": "CIBYP",
+        "icon": "$(debug-stop)"
+      },
+      {
+        "command": "cibyp.explain",
+        "title": "%explain%",
+        "category": "CIBYP"
+      },
+      {
+        "command": "cibyp.review",
+        "title": "%review%",
+        "category": "CIBYP"
+      },
+      {
+        "command": "cibyp.usage",
+        "title": "%usage%",
+        "category": "CIBYP"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "cibyp.connect",
+          "when": "view == cibyp.chat",
+          "group": "navigation@1"
+        },
+        {
+          "command": "cibyp.sessions",
+          "when": "view == cibyp.chat",
+          "group": "navigation@2"
+        },
+        {
+          "command": "cibyp.new",
+          "when": "view == cibyp.chat",
+          "group": "navigation@3"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "cibyp.explain",
+          "when": "editorHasSelection",
+          "group": "cibyp@1"
+        },
+        {
+          "command": "cibyp.review",
+          "when": "editorHasSelection",
+          "group": "cibyp@2"
+        },
+        {
+          "command": "cibyp.attach",
+          "group": "cibyp@3"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "cibyp.attach",
+        "key": "ctrl+alt+a",
+        "mac": "cmd+alt+a",
+        "when": "editorTextFocus"
+      }
+    ],
+    "configuration": {
+      "title": "CIBYP",
+      "properties": {
+        "cibyp.startCommand": {
+          "type": "string",
+          "default": "cibyp-tui",
+          "scope": "application",
+          "description": "%startDescription%"
+        },
+        "cibyp.remoteWorkspace": {
+          "type": "string",
+          "default": "",
+          "description": "%remoteWorkspace%"
+        }
+      }
+    }
+  }
+}

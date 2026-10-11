@@ -1,0 +1,82 @@
+name: IDE Extensions
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ide-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  vscode:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm test
+      - run: xvfb-run -a npm run test:vscode
+      - run: npm run package:vscode
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cibyp-vscode
+          path: vscode/*.vsix
+          if-no-files-found: error
+  jetbrains:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v4
+      - run: chmod +x gradlew && ./gradlew test buildPlugin verifyPluginProjectConfiguration --console=plain
+        working-directory: jetbrains
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cibyp-jetbrains
+          path: jetbrains/build/distributions/*.zip
+          if-no-files-found: error
+  desktop-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: B5-Software/Could-I-Be-Your-Partner
+          path: .cache/desktop
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm ci --ignore-scripts
+        working-directory: .cache/desktop
+      - run: npm test
+        env:
+          CIBYP_SOURCE: .cache/desktop
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [vscode, jetbrains, desktop-contract]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - name: Publish installable plugins
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          find artifacts -type f \( -name '*.vsix' -o -name '*.zip' \) -exec sha256sum {} + > SHA256SUMS
+          gh release create "$RELEASE_TAG" artifacts/cibyp-vscode/*.vsix artifacts/cibyp-jetbrains/*.zip SHA256SUMS --title "$RELEASE_TAG" --generate-notes --prerelease

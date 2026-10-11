@@ -1,0 +1,4 @@
+src/**
+**/*.map
+**/*.test.*
+node_modules/**

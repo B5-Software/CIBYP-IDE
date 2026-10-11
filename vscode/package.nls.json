@@ -1,0 +1,14 @@
+{
+  "connect": "Connect to Instance",
+  "disconnect": "Disconnect",
+  "start": "Start Local Backend",
+  "new": "New Conversation",
+  "sessions": "Switch Conversation / History",
+  "attach": "Attach Selection and Diagnostics",
+  "stop": "Stop Current Task",
+  "explain": "Explain Selection",
+  "review": "Review Selection",
+  "usage": "Show Usage",
+  "startDescription": "Executable to start CIBYP in a visible integrated terminal. Only runs when you explicitly choose Start Local Backend.",
+  "remoteWorkspace": "Workspace directory on the remote CIBYP machine. Local paths are never silently sent to a remote host."
+}

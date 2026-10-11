@@ -1,0 +1,10 @@
+node_modules/
+vscode/dist/
+vscode/*.vsix
+.gradle/
+**/build/
+jetbrains/.intellijPlatform/
+.idea/
+.cache/
+*.log
+.DS_Store

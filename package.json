@@ -1,0 +1,28 @@
+{
+  "name": "cibyp-ide",
+  "private": true,
+  "version": "0.1.0-alpha.1",
+  "license": "GPL-3.0-or-later",
+  "scripts": {
+    "build": "npm run typecheck && node scripts/build.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test tests/*.test.ts",
+    "package:vscode": "npm run build && cd vscode && vsce package --no-dependencies",
+    "test:vscode": "npm run build && tsx tests/vscode-runner.ts"
+  },
+  "dependencies": {
+    "ws": "^8.18.3",
+    "markdown-it": "^14.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.18.0",
+    "@types/ws": "^8.18.1",
+    "@types/vscode": "^1.96.0",
+    "@types/markdown-it": "^14.1.2",
+    "@vscode/vsce": "^3.6.0",
+    "@vscode/test-electron": "^2.5.2",
+    "esbuild": "^0.25.10",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.2"
+  }
+}

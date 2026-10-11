@@ -1,0 +1,14 @@
+{
+  "connect": "连接实例",
+  "disconnect": "断开连接",
+  "start": "启动本机后台",
+  "new": "新建对话",
+  "sessions": "切换对话 / 历史",
+  "attach": "附加选区与诊断",
+  "stop": "停止当前任务",
+  "explain": "解释选区",
+  "review": "审查选区",
+  "usage": "查看用量",
+  "startDescription": "在可见集成终端启动 CIBYP 的程序。仅在手动选择“启动本机后台”后执行。",
+  "remoteWorkspace": "远程 CIBYP 主机上的工作区目录。不会自动将本机路径用作远程目录。"
+}
