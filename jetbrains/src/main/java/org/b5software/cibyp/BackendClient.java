@@ -81,6 +81,15 @@ public final class BackendClient implements AutoCloseable {
     if (token.isEmpty()) throw new SecurityException("Login returned no session token.");
     return token;
   }
+  public JsonElement remote(String method, JsonObject params) throws Exception {
+    String id = UUID.randomUUID().toString();
+    JsonObject body = new JsonObject();
+    body.addProperty("jsonrpc", "2.0"); body.addProperty("id", id); body.addProperty("method", method); body.add("params", params);
+    JsonObject value = http("/remote/v2/rpc", body);
+    if (!id.equals(string(value, "id"))) throw new IllegalStateException("Mismatched Remote response");
+    if (value.has("error")) throw new IllegalStateException(string(value.getAsJsonObject("error"), "message"));
+    return value.get("result");
+  }
 
   public JsonElement request(String method, Object... args) throws Exception {
     JsonObject body = new JsonObject();

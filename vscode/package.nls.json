@@ -1,4 +1,5 @@
 {
+  "hardware": "Hardware Nodes",
   "connect": "Connect to Instance",
   "disconnect": "Disconnect",
   "start": "Start Local Backend",

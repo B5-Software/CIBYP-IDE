@@ -113,6 +113,7 @@ public final class CibypPanel implements Disposable {
     actions.add(action("connect", AllIcons.Actions.Execute, this::connectDialog));
     actions.add(action("new", AllIcons.General.Add, () -> createConversation("")));
     actions.add(action("history", AllIcons.Vcs.History, this::history));
+    actions.add(action("hardware", AllIcons.Nodes.Module, this::hardware));
     actions.add(action("disconnect", AllIcons.Actions.Suspend, this::disconnect));
     var toolbar = ActionManager.getInstance().createActionToolbar("CIBYP.Toolbar", actions, true);
     toolbar.setTargetComponent(root);
@@ -413,6 +414,38 @@ public final class CibypPanel implements Disposable {
               });
           refresh();
         });
+  }
+
+  private void hardware() {
+    background(() -> {
+      BackendClient active = requireClient(); long expected = generation;
+      List<JsonObject> nodes = new ArrayList<>(); int offset = 0;
+      do {
+        JsonObject params = new JsonObject(); params.addProperty("offset", offset); params.addProperty("limit", 32);
+        JsonObject page = active.remote("device.page", params).getAsJsonObject();
+        for (JsonElement node : page.getAsJsonArray("items")) nodes.add(node.getAsJsonObject());
+        offset = page.get("nextOffset").isJsonNull() ? -1 : page.get("nextOffset").getAsInt();
+      } while (offset >= 0 && nodes.size() < 128);
+      ui(() -> {
+        if (expected != generation) return;
+        if (nodes.isEmpty()) { Messages.showInfoMessage(project, t("hardware.empty"), t("hardware")); return; }
+        String[] labels = nodes.stream().map(node -> string(node, "label") + " · " + t(node.get("online").getAsBoolean() ? "hardware.online" : "hardware.offline") + " · " + string(node, "id")).toArray(String[]::new);
+        int index = Messages.showChooseDialog(project, t("hardware"), "CIBYP", null, labels, labels[0]);
+        if (index < 0 || expected != generation) return;
+        background(() -> {
+          JsonObject params = new JsonObject(); params.addProperty("deviceId", string(nodes.get(index), "id"));
+          JsonObject node = active.remote("device.get", params).getAsJsonObject();
+          StringBuilder text = new StringBuilder(t("hardware.hint")).append("\n\n");
+          JsonObject policy = node.getAsJsonObject("policy"), tools = policy.has("tools") ? policy.getAsJsonObject("tools") : new JsonObject();
+          for (var entry : tools.entrySet()) {
+            JsonObject grant = entry.getValue().getAsJsonObject();
+            text.append(entry.getKey()).append(" · ").append(t(grant.has("write") && grant.get("write").getAsBoolean() ? "hardware.write" : "hardware.read")).append('\n');
+            for (JsonElement resource : grant.getAsJsonArray("resources")) text.append("  ").append(resource.getAsString()).append('\n');
+          }
+          ui(() -> { if (expected == generation) Messages.showInfoMessage(project, text.toString(), string(node, "label")); });
+        });
+      });
+    });
   }
 
   private void history() {
@@ -872,7 +905,16 @@ public final class CibypPanel implements Disposable {
               || !current.get("pendingInteraction").toString().equals(identity))
             throw new IllegalStateException(t("expired.request"));
           if (expected != generation) return;
-          active.request("respond", target, response);
+          JsonObject interaction = current.getAsJsonObject("pendingInteraction");
+          if (!string(interaction, "id").isEmpty()) {
+            JsonObject params = new JsonObject();
+            params.addProperty("sessionId", target); params.addProperty("interactionId", string(interaction, "id"));
+            params.add("revision", interaction.get("revision")); params.addProperty("operationId", UUID.randomUUID().toString());
+            JsonElement answer = JSON.toJsonTree(response);
+            if ("questions".equals(string(interaction, "kind")) && answer.isJsonObject() && answer.getAsJsonObject().has("answers")) params.add("answers", answer.getAsJsonObject().get("answers"));
+            else params.add("response", answer);
+            active.remote("interaction.answer", params);
+          } else active.request("respond", target, response);
           refresh();
         });
   }

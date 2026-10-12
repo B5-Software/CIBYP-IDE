@@ -53,6 +53,12 @@
     },
     "commands": [
       {
+        "command": "cibyp.hardware",
+        "title": "%hardware%",
+        "category": "CIBYP",
+        "icon": "$(circuit-board)"
+      },
+      {
         "command": "cibyp.connect",
         "title": "%connect%",
         "category": "CIBYP",
@@ -110,6 +116,11 @@
     ],
     "menus": {
       "view/title": [
+        {
+          "command": "cibyp.hardware",
+          "when": "view == cibyp.chat",
+          "group": "navigation@4"
+        },
         {
           "command": "cibyp.connect",
           "when": "view == cibyp.chat",

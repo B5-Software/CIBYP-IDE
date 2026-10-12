@@ -15,6 +15,22 @@ const until = async (fn: () => boolean) => {
     await new Promise((r) => setTimeout(r, 10));
   }
 };
+test("Remote v2 device reads validate response identity and preserve permission errors", async (t) => {
+  const f = await fixture();
+  t.after(() => f.close());
+  const client = new BackendClient({ ...f, local: true });
+  t.after(() => client.close());
+  const page = await client.remote("device.page", { limit: 32 });
+  assert.equal(page.items[0].id, "board");
+  await assert.rejects(
+    client.remote("device.get", { deviceId: "board" }),
+    (error: any) => error.reason === "FORBIDDEN",
+  );
+  await assert.rejects(
+    client.remote("fixture.wrongId"),
+    /Mismatched Remote response/,
+  );
+});
 test("authenticated shared client connects, sends a turn, receives events and reconnects", async (t) => {
   const f = await fixture();
   t.after(() => f.close());

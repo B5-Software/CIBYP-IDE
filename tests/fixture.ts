@@ -34,6 +34,30 @@ export async function fixture(
     if (requests.has(body.id))
       return res.end(JSON.stringify(requests.get(body.id)));
     calls.push(body);
+    if (req.url === "/remote/v2/rpc")
+      return res.end(
+        JSON.stringify({
+          jsonrpc: "2.0",
+          id: body.method === "fixture.wrongId" ? "wrong" : body.id,
+          ...(body.method === "device.page"
+            ? {
+                result: {
+                  items: [
+                    { id: "board", label: "LED", online: true, toolCount: 2 },
+                  ],
+                  total: 1,
+                  nextOffset: null,
+                },
+              }
+            : {
+                error: {
+                  code: 1003,
+                  message: "Denied",
+                  data: { reason: "FORBIDDEN" },
+                },
+              }),
+        }),
+      );
     const args = body.args || [];
     let result: any = { ok: true };
     const get = (key: string) => sessions.find((s) => s.key === key);

@@ -496,6 +496,69 @@ class CibypView implements vscode.WebviewViewProvider, vscode.Disposable {
     });
     await vscode.window.showTextDocument(doc, { preview: true });
   }
+  async hardware() {
+    const client = this.requireClient(),
+      generation = this.generation;
+    const nodes: any[] = [];
+    let offset: number | null = 0;
+    do {
+      const page: any = await client.remote("device.page", {
+        offset,
+        limit: 32,
+      });
+      nodes.push(...page.items);
+      offset = page.nextOffset;
+    } while (offset !== null && nodes.length < 128);
+    if (generation !== this.generation) return;
+    if (!nodes.length) {
+      await vscode.window.showInformationMessage(
+        tr(
+          "No hardware nodes. Pair a device in the backend settings.",
+          "没有硬件节点。请在后台设置中配对设备。",
+        ),
+      );
+      return;
+    }
+    const picked = await vscode.window.showQuickPick(
+      nodes.map((node) => ({
+        label: node.label || node.id,
+        description: node.online ? tr("Online", "在线") : tr("Offline", "离线"),
+        detail: `${node.id} · ${node.toolCount} ${tr("authorized tools", "个授权工具")}`,
+        node,
+      })),
+      { title: tr("CIBYP Hardware Nodes", "CIBYP 硬件节点") },
+    );
+    if (!picked || generation !== this.generation) return;
+    const node: any = await client.remote("device.get", {
+      deviceId: picked.node.id,
+    });
+    if (generation !== this.generation) return;
+    const lines = [
+      node.label || node.id,
+      node.online ? tr("Online", "在线") : tr("Offline", "离线"),
+      "",
+      tr(
+        "Ask the Agent to operate hardware. Writes require approval.",
+        "在聊天中让 Agent 操作硬件；写入仍需审批。",
+      ),
+      "",
+    ];
+    for (const [name, value] of Object.entries(node.policy?.tools || {})) {
+      const grant = value as any;
+      lines.push(
+        `${name} · ${grant.write ? tr("Write", "可写") : tr("Read only", "只读")}`,
+        ...(grant.resources || []).map((resource: string) => `  ${resource}`),
+        "",
+      );
+    }
+    await vscode.window.showTextDocument(
+      await vscode.workspace.openTextDocument({
+        content: lines.join("\n"),
+        language: "plaintext",
+      }),
+      { preview: true },
+    );
+  }
   private async onMessage(message: any) {
     if (!message || typeof message.type !== "string") return;
     if (message.type === "ready") {
@@ -627,20 +690,34 @@ class CibypView implements vscode.WebviewViewProvider, vscode.Disposable {
           throw new Error(
             tr("This request was already answered.", "这个请求已经被回答。"),
           );
-        await client.request("answerQuestions", key, answers);
+        if (view.pendingInteraction.id)
+          await client.remote("interaction.answer", {
+            sessionId: key,
+            interactionId: view.pendingInteraction.id,
+            revision: view.pendingInteraction.revision,
+            answers,
+            operationId: randomUUID(),
+          });
+        else await client.request("answerQuestions", key, answers);
       } else {
         if (generation !== this.generation || key !== this.key) return;
-        await client.request(
-          "respond",
-          key,
+        const response =
           message.approve === true
             ? view.pendingInteraction.kind === "approval"
               ? true
               : "allow-once"
             : view.pendingInteraction.kind === "approval"
               ? false
-              : "deny",
-        );
+              : "deny";
+        if (view.pendingInteraction.id)
+          await client.remote("interaction.answer", {
+            sessionId: key,
+            interactionId: view.pendingInteraction.id,
+            revision: view.pendingInteraction.revision,
+            response,
+            operationId: randomUUID(),
+          });
+        else await client.request("respond", key, response);
       }
       await this.refresh();
     }
@@ -701,6 +778,7 @@ export function activate(context: vscode.ExtensionContext) {
     explain: () => provider.prompt("explain"),
     review: () => provider.prompt("review"),
     usage: () => provider.usage(),
+    hardware: () => provider.hardware(),
   };
   for (const [name, action] of Object.entries(actions))
     context.subscriptions.push(

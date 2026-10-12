@@ -1,4 +1,5 @@
 {
+  "hardware": "硬件节点",
   "connect": "连接实例",
   "disconnect": "断开连接",
   "start": "启动本机后台",

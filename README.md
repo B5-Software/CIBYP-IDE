@@ -69,3 +69,7 @@ CI 分别生成 VSIX 和 JetBrains 插件 ZIP，检查真实 VS Code 扩展宿�
 这是首个可安装版本，不宣称已经验证所有 IDE / 远程开发组合。JetBrains 语言诊断与 LSP 的通用回传、IDE 原生 Tor、交互式多文件补丁合并是后续工作。Agent 文件与终端操作继续遵循 CIBYP 后台审批；“在编辑器审查”不会自动执行代码或覆盖文件。Markdown 中的 HTML 和远程图片不加载。
 
 接口说明：[protocol.md](docs/protocol.md)。前端遵循 [VS Code Webview UX](https://code.visualstudio.com/api/ux-guidelines/webviews) 和 [JetBrains Tool Windows](https://plugins.jetbrains.com/docs/intellij/tool-windows.html)。
+
+## 硬件节点
+
+VS Code 的 `CIBYP: Hardware Nodes` 命令 / 标题栏电路板按钮、JetBrains 工具窗口的硬件按钮查看当前后台的设备与授权资源。目录分页，策略按需读取；显示使用 IDE 原生选择器与只读预览。硬件动作交给聊天 Agent，保留审批和租约。新版后台的审批回答携带 interaction ID / revision，旧后台继续兼容。硬件入口需要 Remote v2（当前桌面源码或 CIBYP Mini）。

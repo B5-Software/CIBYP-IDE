@@ -95,6 +95,23 @@ export class BackendClient {
     this.openSocket(++this.generation);
     return snapshot;
   }
+  async remote<T = any>(
+    method: string,
+    params: Record<string, unknown> = {},
+  ): Promise<T> {
+    const id = randomUUID();
+    const value = await this.http(
+      "/remote/v2/rpc",
+      { jsonrpc: "2.0", id, method, params },
+      30000,
+    );
+    if (value.id !== id) throw new Error("Mismatched Remote response");
+    if (value.error)
+      throw Object.assign(new Error(value.error.message), {
+        reason: value.error.data?.reason,
+      });
+    return value.result;
+  }
   private openSocket(generation: number) {
     if (this.closed || generation !== this.generation) return;
     const socket = new WebSocket(
